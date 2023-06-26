@@ -1,0 +1,30 @@
+{
+    "name": "com.ametrin.command",
+    "displayName": "Ametrin Command System",
+    "version": "0.1.0",
+    "unity": "2022.2",
+    "description": "console-like command system",
+    "license": "MIT",
+    "dependencies": {
+        "com.ametrin.unity-console": "0.1.0"
+    },
+    "author": {
+        "name": "Barion",
+        "email": "ametrin.studios@gmail.com",
+        "url": "https://github.com/BarionLP"
+    },
+    "bugs": {
+        "url": "https://github.com/BarionLP/UnityUtils/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/BarionLP/UnityUtils.git"
+    },
+    "samples": [
+        {
+            "displayName": "Demo/Test",
+            "description": "A simple test and demo",
+            "path": "Samples~/DemoTest"
+        }
+    ]
+}
