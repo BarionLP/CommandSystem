@@ -28,20 +28,24 @@ namespace Ametrin.Command{
             }
         }
 
+        public static void Log(string message) => Logger.Log(message);
+        public static void LogWarning(string message) => Logger.LogWarning(message);
+        public static void LogError(string message) => Logger.LogError(message);
+
         public static void Execute(string input){
             var inputParts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             if(inputParts.Length == 0) return;
 
             var commandName = inputParts[0];
             if (!Commands.TryGetValue(commandName, out var command)){
-                Logger.LogError("Command not found: " + commandName);
+                LogError("Command not found: " + commandName);
                 return;
             }
 
             var parameters = command.info.GetParameters();
             var args = new object[parameters.Length];
 
-            if(parameters.Length < inputParts.Length - 1) Logger.LogError($"Too many arguments: expected {parameters.Length} got {inputParts.Length - 1}");
+            if(parameters.Length < inputParts.Length - 1) LogError($"Too many arguments: expected {parameters.Length} got {inputParts.Length - 1}");
 
             for(var i = 0; i < parameters.Length; i++){
                 var parameter = parameters[i];
@@ -54,7 +58,7 @@ namespace Ametrin.Command{
 
                 if(arg is null){
                     if (!parameter.HasDefaultValue){
-                        Logger.LogError($"Missing or invalid argument: {parameter.Name}");
+                        LogError($"Missing or invalid argument: {parameter.Name}");
                         return;
                     }
                     arg = parameter.DefaultValue;
