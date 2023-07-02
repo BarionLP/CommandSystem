@@ -2,13 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using Ametrin.Console;
 
 namespace Ametrin.Command{
     public static class CommandManager{
         private static readonly Dictionary<string, (MethodInfo info, string syntax)> Commands = new();
         private static readonly Dictionary<Type, ICommandArgumentParser> ArgumentParsers = new();
+        private static ICommandLogger Logger = new DebugCommandLogger();
 
+        public static void OverrideLogger(ICommandLogger logger){
+            Logger = logger;
+        }
         public static void RegisterArgumentParser<T>(ICommandArgumentParser argumentParser){
             ArgumentParsers[typeof(T)] = argumentParser;
         }
@@ -31,14 +34,14 @@ namespace Ametrin.Command{
 
             var commandName = inputParts[0];
             if (!Commands.TryGetValue(commandName, out var command)){
-                ConsoleManager.AddErrorMessage("Command not found: " + commandName);
+                Logger.LogError("Command not found: " + commandName);
                 return;
             }
 
             var parameters = command.info.GetParameters();
             var args = new object[parameters.Length];
 
-            if(parameters.Length < inputParts.Length - 1) ConsoleManager.AddErrorMessage($"Too many arguments: expected {parameters.Length} got {inputParts.Length - 1}");
+            if(parameters.Length < inputParts.Length - 1) Logger.LogError($"Too many arguments: expected {parameters.Length} got {inputParts.Length - 1}");
 
             for(var i = 0; i < parameters.Length; i++){
                 var parameter = parameters[i];
@@ -51,7 +54,7 @@ namespace Ametrin.Command{
 
                 if(arg is null){
                     if (!parameter.HasDefaultValue){
-                        ConsoleManager.AddErrorMessage($"Missing or invalid argument: {parameter.Name}");
+                        Logger.LogError($"Missing or invalid argument: {parameter.Name}");
                         return;
                     }
                     arg = parameter.DefaultValue;
