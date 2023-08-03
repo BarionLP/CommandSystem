@@ -3,7 +3,12 @@ using UnityEngine;
 
 
 namespace Ametrin.Command.Demo{
-    public sealed class TestCommands : MonoBehaviour{
+    public sealed class TestCommands{
+        static TestCommands{
+            CommandManager.RegisterArgumentParser<Item>(new ItemCommandArgumentParser());
+            CommandManager.RegisterCommands<TestCommands>();
+        }
+
         [Command("add")]
         public static void Add(int left, int right){
             CommandManager.Log($"{left} + {right} is {left+right}");
