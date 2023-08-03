@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -83,7 +84,9 @@ namespace Ametrin.Command{
             }
         }
 
-        public static string GetSyntax(string commandKey){
+        public static string GetFirstSyntax()=> Commands.Values.First().syntax;
+
+        public static string GetSyntax(string commandKey){          
             foreach(var command in Commands){
                 if(command.Key.StartsWith(commandKey)) return command.Value.syntax;
             }
