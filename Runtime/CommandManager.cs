@@ -93,6 +93,14 @@ namespace Ametrin.Command{
             
             return null;
         }
+        
+        public static string GetFirstCommand(string start){          
+            foreach(var command in Commands){
+                if(command.Key.StartsWith(start)) return command.Key;
+            }
+            
+            return null;
+        }
 
         private static string GenerateCommandSytanx(string key, MethodInfo method){   
             var builder = new StringBuilder(key);
