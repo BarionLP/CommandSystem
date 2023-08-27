@@ -12,6 +12,7 @@ namespace Ametrin.Command{
         private static ICommandLogger Logger;
         
         static CommandManager(){
+            RegisterArgumentParser<short>(new StringArgumentParser());
             RegisterArgumentParser<short>(new ShortArgumentParser());
             RegisterArgumentParser<ushort>(new UShortArgumentParser());
             RegisterArgumentParser<int>(new IntArgumentParser());

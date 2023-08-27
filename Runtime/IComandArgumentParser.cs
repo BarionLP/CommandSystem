@@ -6,6 +6,12 @@ namespace Ametrin.Command{
         public virtual string[] GetSuggestions() => Array.Empty<string>();
     }
 
+    public sealed class StringArgumentParser : ICommandArgumentParser{
+        public object Parse(ReadOnlySpan<char> raw){
+            return raw.ToString();
+        }
+    }
+    
     public sealed class ShortArgumentParser : ICommandArgumentParser{
         public object Parse(ReadOnlySpan<char> raw){
             if(short.TryParse(raw, out var result)) return result;
