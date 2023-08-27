@@ -3,12 +3,23 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using Ametrin.Utils;
 
 namespace Ametrin.Command{
     public static class CommandManager{
         private static readonly Dictionary<string, (MethodInfo info, string syntax)> Commands = new();
         private static readonly Dictionary<Type, ICommandArgumentParser> ArgumentParsers = new();
-        private static ICommandLogger Logger = new DebugCommandLogger();
+        private static ICommandLogger Logger;
+        
+        static CommandManager(){
+            RegisterArgumentParser<short>(new ShortArgumentParser());
+            RegisterArgumentParser<ushort>(new UShortArgumentParser());
+            RegisterArgumentParser<int>(new IntArgumentParser());
+            RegisterArgumentParser<uint>(new UIntArgumentParser());
+            RegisterArgumentParser<float>(new FloatArgumentParser());
+            RegisterArgumentParser<long>(new LongArgumentParser());
+            RegisterArgumentParser<ulong>(new ULongArgumentParser());
+        }
 
         public static void OverrideLogger(ICommandLogger logger){
             Logger = logger;
@@ -33,28 +44,28 @@ namespace Ametrin.Command{
         public static void LogWarning(string message) => Logger.LogWarning(message);
         public static void LogError(string message) => Logger.LogError(message);
 
-        public static void Execute(string input){
-            var inputParts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-            if(inputParts.Length == 0) return;
+        public static void Execute(ReadOnlySpan<char> input){
+            var inputParts = input.Split(' ');
+            if(inputParts.Count == 0) return;
 
-            var commandName = inputParts[0];
+            var commandName = input[inputParts[0]];
             if (!Commands.TryGetValue(commandName, out var command)){
-                LogError("Command not found: " + commandName);
+                LogError($"Command not found: {commandName.ToString()}");
                 return;
             }
 
             var parameters = command.info.GetParameters();
             var args = new object[parameters.Length];
 
-            if(parameters.Length < inputParts.Length - 1) LogError($"Too many arguments: expected {parameters.Length} got {inputParts.Length - 1}");
+            if(parameters.Length < inputParts.Count - 1) LogError($"Too many arguments: expected {parameters.Length} got {inputParts.Count - 1}");
 
             for(var i = 0; i < parameters.Length; i++){
                 var parameter = parameters[i];
 
                 object arg = null;
 
-                if(i + 1 < inputParts.Length){
-                    arg = ConvertArgument(inputParts[i + 1], parameter.ParameterType);
+                if(i + 1 < inputParts.Count){
+                    arg = ConvertArgument(input[inputParts[i + 1]], parameter.ParameterType);
                 }
 
                 if(arg is null){
@@ -71,22 +82,17 @@ namespace Ametrin.Command{
             command.info.Invoke(null, args);
         }
 
-        private static object ConvertArgument(string argValue, Type targetType){
-            if (ArgumentParsers.TryGetValue(targetType, out var argumentParser)){
+        private static object ConvertArgument(ReadOnlySpan<char> argValue, Type targetType){
+            if(ArgumentParsers.TryGetValue(targetType, out var argumentParser)){
                 return argumentParser.Parse(argValue);
             }
 
-            try{
-                return Convert.ChangeType(argValue, targetType);
-            }
-            catch{
-                return null;
-            }
+            return null;
         }
 
         public static string GetFirstSyntax()=> Commands.Values.First().syntax;
 
-        public static string GetSyntax(string commandKey){          
+        public static string GetSyntax(ReadOnlySpan<char> commandKey){          
             foreach(var command in Commands){
                 if(command.Key.StartsWith(commandKey)) return command.Value.syntax;
             }
@@ -94,7 +100,7 @@ namespace Ametrin.Command{
             return null;
         }
         
-        public static string GetFirstCommand(string start){          
+        public static string GetFirstCommand(ReadOnlySpan<char> start){          
             foreach(var command in Commands){
                 if(command.Key.StartsWith(start)) return command.Key;
             }

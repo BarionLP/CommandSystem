@@ -1,8 +1,8 @@
 {
-    "name": "Ametrin.Command",
+    "name": "Ametrin.Command.Unity",
     "rootNamespace": "",
     "references": [
-        "GUID:1dcc606ed8b26b847b2cefc1750b72ce"
+        "GUID:24bf1c9729f14c04d827ab4b260e61eb"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -12,5 +12,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": true
+    "noEngineReferences": false
 }
