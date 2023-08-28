@@ -2,42 +2,25 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using Ametrin.Utils;
 
-namespace Ametrin.Command{
+namespace Ametrin.Command
+{
     public static class CommandManager{
-        private static readonly Dictionary<string, (MethodInfo info, string syntax)> Commands = new();
-        private static readonly Dictionary<Type, ICommandArgumentParser> ArgumentParsers = new();
+        private static readonly Dictionary<string, ICommand> Commands = new();
         private static ICommandLogger Logger;
-        
-        static CommandManager(){
-            RegisterArgumentParser<string>(new StringArgumentParser());
-            RegisterArgumentParser<short>(new ShortArgumentParser());
-            RegisterArgumentParser<ushort>(new UShortArgumentParser());
-            RegisterArgumentParser<int>(new IntArgumentParser());
-            RegisterArgumentParser<uint>(new UIntArgumentParser());
-            RegisterArgumentParser<float>(new FloatArgumentParser());
-            RegisterArgumentParser<long>(new LongArgumentParser());
-            RegisterArgumentParser<ulong>(new ULongArgumentParser());
-        }
 
-        public static void OverrideLogger(ICommandLogger logger){
+        public static void SetLoggger(ICommandLogger logger){
             Logger = logger;
-        }
-        public static void RegisterArgumentParser<T>(ICommandArgumentParser argumentParser){
-            ArgumentParsers[typeof(T)] = argumentParser;
         }
 
         public static void RegisterCommands<T>(){
-            var methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
-
+            var methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
             foreach (var method in methods){
                 var attribute = method.GetCustomAttribute<CommandAttribute>();
                 if (attribute is null) continue;
-
-                var commandName = attribute.Name ?? method.Name.ToLower();
-                Commands[commandName] = (method, GenerateCommandSytanx(commandName, method));
+                var command = MethodCommand.Of(method, attribute.Name);
+                Commands[command.Key] = command;
             }
         }
 
@@ -50,85 +33,45 @@ namespace Ametrin.Command{
             if(inputParts.Count == 0) return;
 
             var commandName = input[inputParts[0]];
-            if (!Commands.TryGetValue(commandName, out var command)){
+            if(GetCommand(commandName).HasFailed(out var command)){
                 LogError($"Command not found: {commandName.ToString()}");
                 return;
             }
 
-            var parameters = command.info.GetParameters();
-            var args = new object[parameters.Length];
-
-            if(parameters.Length < inputParts.Count - 1) LogError($"Too many arguments: expected {parameters.Length} got {inputParts.Count - 1}");
-
-            for(var i = 0; i < parameters.Length; i++){
-                var parameter = parameters[i];
-
-                object arg = null;
-
-                if(i + 1 < inputParts.Count){
-                    arg = ConvertArgument(input[inputParts[i + 1]], parameter.ParameterType);
-                }
-
-                if(arg is null){
-                    if (!parameter.HasDefaultValue){
-                        LogError($"Missing or invalid argument: {parameter.Name}");
-                        return;
-                    }
-                    arg = parameter.DefaultValue;
-                }
-
-                args[i] = arg;
-            }
-
-            command.info.Invoke(null, args);
+            command.Execute(input, inputParts.Skip(1));
         }
 
-        private static object ConvertArgument(ReadOnlySpan<char> argValue, Type targetType){
-            if(ArgumentParsers.TryGetValue(targetType, out var argumentParser)){
-                return argumentParser.Parse(argValue);
-            }
+        public static string GetFirstSyntax()=> Commands.Values.First().GetSyntax();
+        public static string GetFirstCommand()=> Commands.Keys.First();
 
-            return null;
-        }
-
-        public static string GetFirstSyntax()=> Commands.Values.First().syntax;
-
-        public static string GetSyntax(ReadOnlySpan<char> commandKey){          
+        public static string GetSyntax(ReadOnlySpan<char> key){          
             foreach(var command in Commands){
-                if(command.Key.StartsWith(commandKey)) return command.Value.syntax;
+                if(command.Key.StartsWith(key)) return command.Value.GetSyntax();
             }
             
             return null;
         }
         
-        public static string GetFirstCommand(ReadOnlySpan<char> start){          
+        public static string GetFirstCommand(ReadOnlySpan<char> filter){          
+            if(filter.IsEmpty) return Commands.First().Value.GetSyntax();
             foreach(var command in Commands){
-                if(command.Key.StartsWith(start)) return command.Key;
+                if(command.Key.StartsWith(filter)) return command.Key;
             }
             
             return null;
         }
 
-        private static string GenerateCommandSytanx(string key, MethodInfo method){   
-            var builder = new StringBuilder(key);
-            
-            foreach(var parameter in method.GetParameters()){
-                if(parameter.HasDefaultValue){
-                    builder.AppendFormat(" [<{0}>]", parameter.Name);
-                }else{
-                    builder.AppendFormat(" <{0}>", parameter.Name);
-                }
-            }
-
-            return builder.ToString();
+        public static Result<ICommand> GetCommand(ReadOnlySpan<char> key){
+            if(Commands.TryGetValue(key, out var command)) return Result<ICommand>.Succeeded(command);
+            return ResultStatus.Null;
         }
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class CommandAttribute : Attribute{
-        public string Name { get; set; }
+        public readonly string Name;
 
-        public CommandAttribute() { }
+        public CommandAttribute() : this(null) { }
 
         public CommandAttribute(string name){
             Name = name;

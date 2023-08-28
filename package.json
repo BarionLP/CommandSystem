@@ -1,12 +1,12 @@
 {
     "name": "com.ametrin.command",
     "displayName": "Ametrin Command System",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "unity": "2022.3",
     "description": "console-like command system",
     "license": "MIT",
     "dependencies": {
-        "com.ametrin.utils": "0.1.11"
+        "com.ametrin.utils": "0.1.12"
     },
     "author": {
         "name": "Barion",
