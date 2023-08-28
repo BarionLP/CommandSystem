@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Ametrin.Registry;
 
 namespace Ametrin.Command{
     public static class ArgumentParsers{
@@ -28,12 +29,17 @@ namespace Ametrin.Command{
 
             throw new NullReferenceException($"No parser registered for {t.Name}");
         }
-
     }
 
     public interface IArgumentParser{
         public object Parse(ReadOnlySpan<char> raw);
         public IEnumerable<string> GetSuggestions();
+    }
+
+    public sealed class EnumArgumentParser<TEnum> : IArgumentParser where TEnum : Enum{
+        private readonly EnumRegistry<TEnum> Registry = new();
+        public object Parse(ReadOnlySpan<char> raw) => Registry.TryGet(raw).TryResolve(out var result) ? result : null;
+        public IEnumerable<string> GetSuggestions() => Registry.Keys;
     }
 
     public abstract class PrimitiveArgumentParser : IArgumentParser{

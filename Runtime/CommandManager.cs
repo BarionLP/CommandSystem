@@ -1,16 +1,15 @@
 using System;
 using System.Linq;
-using System.Collections.Generic;
 using System.Reflection;
 using Ametrin.Utils;
+using Ametrin.Registry;
 
-namespace Ametrin.Command
-{
+namespace Ametrin.Command{
     public static class CommandManager{
-        private static readonly Dictionary<string, ICommand> Commands = new();
+        private static readonly MutableRegistry<string, ICommand> Commands = new();
         private static ICommandLogger Logger;
 
-        public static void SetLoggger(ICommandLogger logger){
+        public static void SetLogger(ICommandLogger logger){
             Logger = logger;
         }
 
@@ -20,7 +19,7 @@ namespace Ametrin.Command
                 var attribute = method.GetCustomAttribute<CommandAttribute>();
                 if (attribute is null) continue;
                 var command = MethodCommand.Of(method, attribute.Name);
-                Commands[command.Key] = command;
+                Commands.TryRegister(command.Key, command).Catch(error => LogError($"Failed registering command {command.Key} because {error}"));
             }
         }
 
@@ -33,7 +32,7 @@ namespace Ametrin.Command
             if(inputParts.Count == 0) return;
 
             var commandName = input[inputParts[0]];
-            if(GetCommand(commandName).HasFailed(out var command)){
+            if(!GetCommand(commandName).TryResolve(out var command)){
                 LogError($"Command not found: {commandName.ToString()}");
                 return;
             }
@@ -41,7 +40,7 @@ namespace Ametrin.Command
             command.Execute(input, inputParts.Skip(1));
         }
 
-        public static string GetFirstSyntax()=> Commands.Values.First().GetSyntax();
+        public static string GetFirstSyntax()=> Commands.First().Value.GetSyntax();
         public static string GetFirstCommand()=> Commands.Keys.First();
 
         public static string GetSyntax(ReadOnlySpan<char> key){          
@@ -62,7 +61,7 @@ namespace Ametrin.Command
         }
 
         public static Result<ICommand> GetCommand(ReadOnlySpan<char> key){
-            if(Commands.TryGetValue(key, out var command)) return Result<ICommand>.Succeeded(command);
+            if(Commands.TryGet(key).TryResolve(out var command)) return Result<ICommand>.Succeeded(command);
             return ResultStatus.Null;
         }
     }
