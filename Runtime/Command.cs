@@ -10,8 +10,8 @@ namespace Ametrin.Command{
     public interface ICommand{
         public string Key { get; }
         public void Execute(ReadOnlySpan<char> input, IEnumerable<Range> slices);
-        public string GetSyntax();
-        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool blank);
+        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool endsWithSpace);
+        public string GetSyntax(ReadOnlySpan<char> input, IList<Range> slices);
     }
     
     public sealed class MethodCommand : ICommand{
@@ -51,7 +51,7 @@ namespace Ametrin.Command{
             MethodInfo.Invoke(null, args);
         }
 
-        public string GetSyntax(){
+        public string GetSyntax(ReadOnlySpan<char> input, IList<Range> slices){
             _SyntaxCache ??= GenerateSytanx();
             return _SyntaxCache;
         }
@@ -88,12 +88,12 @@ namespace Ametrin.Command{
             return builder.ToString();
         }
 
-        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool blank){
-            var paramIdx = blank ? slices.Count : slices.Count - 1;
+        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool endsWithSpace){
+            var paramIdx = endsWithSpace ? slices.Count : slices.Count - 1;
             if(paramIdx < 0 || paramIdx >= Parameters.Length) return string.Empty;
             var suggestions = Parameters[paramIdx].Parser.GetSuggestions();
             if(!suggestions.Any()) return string.Empty;
-            if (blank){
+            if (endsWithSpace){
                 return suggestions.First();
             }else{
                 var filter = input[slices[paramIdx]]; // needs to iterate -> BAD
@@ -117,8 +117,46 @@ namespace Ametrin.Command{
         
         public void Execute(ReadOnlySpan<char> args, IEnumerable<Range> slices) => Action();
         
-        public string GetSyntax() => Key;
+        public string GetSyntax(ReadOnlySpan<char> input, IList<Range> slices) => Key;
 
-        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool blank) => string.Empty;
+        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool endsWithSpace) => string.Empty;
+    }
+    
+    public sealed class SimpleCommand<T> : ICommand{
+        public string Key { get; }
+        private readonly Action<T> Action;
+        private readonly IParameter<T> Parameter;
+        private readonly string Syntax;
+
+        public SimpleCommand(string key, Action<T> action, IParameter<T> parameter){
+            Key = key;
+            Action = action;
+            Parameter = parameter;
+            Syntax = Parameter.HasDefaultValue ? $"{Key} [<{Parameter.Name}>({Parameter.DefaultValue})]" : $"{Key} <{Parameter.Name}>";
+        }
+
+
+        public void Execute(ReadOnlySpan<char> args, IEnumerable<Range> slices){
+            if(!slices.Any()){
+                CommandManager.LogError($"Missing argument");
+                return;
+            }
+
+            Action(Parameter.Parser.Parse(args[slices.First()]));
+        }
+
+        public string GetSyntax(ReadOnlySpan<char> input, IList<Range> slices) => Syntax;
+
+        public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool endsWithSpace){
+            if(slices.Count > 1 || (endsWithSpace && slices.Count == 1)) return string.Empty;
+            
+            var suggestions = Parameter.Parser.GetSuggestions();
+            if(endsWithSpace && slices.Count == 0) return suggestions.First();
+            foreach(var suggestion in suggestions){
+                if(suggestion.StartsWith(input[slices[0]])) return suggestion;
+            }
+
+            return string.Empty;
+        }
     }
 }
