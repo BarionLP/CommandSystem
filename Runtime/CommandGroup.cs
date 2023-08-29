@@ -33,11 +33,11 @@ namespace Ametrin.Command{
         }
 
         public string GetSyntax(ReadOnlySpan<char> input, IList<Range> slices){
-            if(slices.Count == 0) return Registry.First().Value.GetSyntax(input, slices);
+            if(slices.Count == 0) return Registry.First().GetSyntax(input, slices);
             var key = input[slices.First()];
             slices.RemoveAt(0);
             foreach (var item in Registry){
-                if(item.Key.StartsWith(key)) return item.Value.GetSyntax(input, slices);
+                if(item.Key.StartsWith(key)) return item.GetSyntax(input, slices);
             }
             return string.Empty;
         }
