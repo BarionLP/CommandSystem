@@ -19,8 +19,12 @@ namespace Ametrin.Command{
                 var attribute = method.GetCustomAttribute<CommandAttribute>();
                 if (attribute is null) continue;
                 var command = MethodCommand.Of(method, attribute.Name);
-                Commands.TryRegister(command.Key, command).Catch(error => LogError($"Failed registering command {command.Key} because {error}"));
+                RegisterCommand(command);
             }
+        }
+
+        public static void RegisterCommand(ICommand command){
+            Commands.TryRegister(command.Key, command).Catch(error => LogError($"Failed registering command {command.Key} because {error}"));
         }
 
         public static void Log(string message) => Logger.Log(message);
