@@ -19,9 +19,8 @@ namespace Ametrin.Command{
             Register(new ULongArgumentParser());
         }
 
-        public static bool Register<T>(IArgumentParser parser){
-            return Parsers.TryAdd(typeof(T), parser);
-        }
+        public static bool Register<T, TParser>() where TParser : IArgumentParser, new() => Register<T>(new TParser());
+        public static bool Register<T>(IArgumentParser parser) => Parsers.TryAdd(typeof(T), parser);
         
         public static bool Register<T>(IArgumentParser<T> parser){
             var t = typeof(T);
@@ -32,7 +31,7 @@ namespace Ametrin.Command{
         public static IArgumentParser<T> Get<T>(){
             var parser = Get(typeof(T));
             if (parser is IArgumentParser<T> real) return real;
-            throw new Exception($"ArgumentParser<{typeof(T).Name}> required");
+            throw new ArgumentException($"ArgumentParser<{typeof(T).Name}> required");
         }
         
         public static IArgumentParser Get(Type t){
