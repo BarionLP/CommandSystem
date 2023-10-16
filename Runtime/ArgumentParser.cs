@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Ametrin.Registry;
+using Ametrin.Utils.Registry;
 
 #nullable enable
 namespace Ametrin.Command{

@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Ametrin.Registry;
 using Ametrin.Utils;
+using Ametrin.Utils.Registry;
 
 namespace Ametrin.Command{
     public sealed class CommandGroup : IEnumerable<KeyValuePair<string, ICommand>>{

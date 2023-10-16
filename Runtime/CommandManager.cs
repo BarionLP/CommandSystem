@@ -1,8 +1,6 @@
 using System;
 using System.Linq;
-using System.Reflection;
 using Ametrin.Utils;
-using Ametrin.Registry;
 
 namespace Ametrin.Command{
     public static class CommandManager{
