@@ -13,7 +13,7 @@ namespace Ametrin.Command{
         }
 
         public void Execute(ReadOnlySpan<char> input, IEnumerable<Range> slices){
-            if (Group.TryGet(input[slices.First()]).TryResolve(out var command)){
+            if (Group.TryGet(input[slices.First()]).ReduceOrNull() is ICommand command){
                 command.Execute(input, slices.Skip(1));
                 return;
             }

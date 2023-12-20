@@ -20,7 +20,7 @@ namespace Ametrin.Command{
             if(inputParts.Count == 0) return;
 
             var key = input[inputParts[0]];
-            if(!Commands.TryGet(key).TryResolve(out var command)){
+            if(Commands.TryGet(key).ReduceOrNull() is not ICommand command){
                 LogError($"Command not found {key.ToString()}");
                 return;
             }
