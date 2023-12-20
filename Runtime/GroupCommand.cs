@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Ametrin.Utils;
+using Ametrin.Utils.Optional;
 
 namespace Ametrin.Command{
     public sealed class GroupCommand : ICommand{
@@ -23,7 +23,7 @@ namespace Ametrin.Command{
         public string CompleteNextParameter(ReadOnlySpan<char> input, IList<Range> slices, bool endsWithSpace)=> Group.CompleteNextParameter(input, slices, endsWithSpace);
         public string GetSyntax(ReadOnlySpan<char> input, IList<Range> slices) => $"{Key} {Group.GetSyntax(input, slices)}";
 
-        public Result Register(ICommand command) => Group.Register(command);
+        public ResultFlag Register(ICommand command) => Group.Register(command);
         public void Register<T>() => Group.Register<T>();
     }    
 }

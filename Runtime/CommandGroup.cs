@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ametrin.Utils;
+using Ametrin.Utils.Optional;
 using Ametrin.Utils.Registry;
 
 namespace Ametrin.Command{
@@ -27,7 +28,7 @@ namespace Ametrin.Command{
                 return string.Empty;
             }
 
-            if (!Registry.TryGet(key).TryResolve(out var command)) return string.Empty;
+            if (Registry.TryGet(key).ReduceOrNull() is not ICommand command) return string.Empty;
             slices.RemoveAt(0);
             return command.CompleteNextParameter(input, slices, endsWithSpace);
         }
@@ -42,11 +43,11 @@ namespace Ametrin.Command{
             return string.Empty;
         }
 
-        public Result<ICommand> TryGet(ReadOnlySpan<char> key) => Registry.TryGet(key);
-        public Result<ICommand> TryGet(string key) => Registry.TryGet(key);
+        public Option<ICommand> TryGet(ReadOnlySpan<char> key) => Registry.TryGet(key);
+        public Option<ICommand> TryGet(string key) => Registry.TryGet(key);
 
-        public Result Register(ICommand command) => Registry.TryRegister(command.Key, command);
-        public Result RegisterGroup(string name, IEnumerable<ICommand> commands){
+        public ResultFlag Register(ICommand command) => Registry.TryRegister(command.Key, command);
+        public ResultFlag RegisterGroup(string name, IEnumerable<ICommand> commands){
             var group = new GroupCommand(name);
             foreach(var command in commands){
                 group.Register(command);
@@ -60,7 +61,7 @@ namespace Ametrin.Command{
             }
         }
         
-        public Result RegisterGroup<T>(string name) => RegisterGroup(name, EnumerateCommands<T>());
+        public ResultFlag RegisterGroup<T>(string name) => RegisterGroup(name, EnumerateCommands<T>());
         
         private IEnumerable<ICommand> EnumerateCommands<T>(){
             var methods = typeof(T).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
