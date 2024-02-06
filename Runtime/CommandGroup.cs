@@ -28,7 +28,7 @@ namespace Ametrin.Command{
                 return string.Empty;
             }
 
-            if (Registry.TryGet(key).ReduceOrNull() is not ICommand command) return string.Empty;
+            if (Registry.TryGet(key).Reduce((ICommand)null) is not ICommand command) return string.Empty;
             slices.RemoveAt(0);
             return command.CompleteNextParameter(input, slices, endsWithSpace);
         }

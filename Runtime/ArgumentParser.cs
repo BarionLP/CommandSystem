@@ -54,7 +54,7 @@ namespace Ametrin.Command{
 
     public sealed class EnumArgumentParser<TEnum> : IArgumentParser where TEnum : Enum{
         private readonly EnumRegistry<TEnum> Registry = new();
-        public object? Parse(ReadOnlySpan<char> raw) => Registry.TryGet(raw).ReduceOrNull();
+        public object? Parse(ReadOnlySpan<char> raw) => Registry.TryGet(raw).ReduceOrThrow();
         public IEnumerable<string> GetSuggestions() => Registry.Keys;
     }
 
