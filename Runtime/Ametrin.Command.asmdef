@@ -1,9 +1,7 @@
 {
     "name": "Ametrin.Command",
     "rootNamespace": "Ametrin.Command",
-    "references": [
-        "GUID:1dcc606ed8b26b847b2cefc1750b72ce"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

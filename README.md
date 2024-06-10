@@ -4,7 +4,6 @@ A system for calling funcions via text input
 
 ## Usage (Unity)
 - (optional) install UpmGitExtension package (https://github.com/mob-sakai/UpmGitExtension.git)
-- install Unity Utils package  (https://github.com/BarionLP/UnityUtils.git)
 - install Command Sytem package (https://github.com/BarionLP/CommandSystem.git)
 
 ### Run Commands

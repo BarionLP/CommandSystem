@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Ametrin.Utils.Registry;
 
 #nullable enable
 namespace Ametrin.Command{
@@ -15,6 +14,7 @@ namespace Ametrin.Command{
             Register(new IntArgumentParser());
             Register(new UIntArgumentParser());
             Register(new FloatArgumentParser());
+            Register(new DoubleArgumentParser());
             Register(new LongArgumentParser());
             Register(new ULongArgumentParser());
         }
@@ -53,9 +53,9 @@ namespace Ametrin.Command{
     }
 
     public sealed class EnumArgumentParser<TEnum> : IArgumentParser where TEnum : Enum{
-        private readonly EnumRegistry<TEnum> Registry = new();
-        public object? Parse(ReadOnlySpan<char> raw) => Registry.TryGet(raw).ReduceOrThrow();
-        public IEnumerable<string> GetSuggestions() => Registry.Keys;
+        private readonly Dictionary<string, TEnum> _registry = Enum.GetValues(typeof(TEnum)).Cast<TEnum>().ToDictionary(val => val.ToString().ToLower());
+        public object? Parse(ReadOnlySpan<char> raw) => _registry[raw.ToString()];
+        public IEnumerable<string> GetSuggestions() => _registry.Keys;
     }
 
     public interface IPrimitiveArgumentParser<T> : IArgumentParser<T>{
@@ -98,6 +98,13 @@ namespace Ametrin.Command{
     public sealed class FloatArgumentParser : IPrimitiveArgumentParser<float?>{
         public float? Parse(ReadOnlySpan<char> raw){
             if(float.TryParse(raw, out var result)) return result;
+            return null;
+        }
+    }
+    
+    public sealed class DoubleArgumentParser : IPrimitiveArgumentParser<double?>{
+        public double? Parse(ReadOnlySpan<char> raw){
+            if(double.TryParse(raw, out var result)) return result;
             return null;
         }
     }

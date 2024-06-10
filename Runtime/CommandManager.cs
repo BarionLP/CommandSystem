@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Ametrin.Utils;
 
 namespace Ametrin.Command{
     public static class CommandManager{
@@ -20,7 +19,7 @@ namespace Ametrin.Command{
             if(inputParts.Count == 0) return;
 
             var key = input[inputParts[0]];
-            if(Commands.TryGet(key).Reduce((ICommand)null) is not ICommand command){
+            if(!Commands.TryGet(key, out var command)){
                 LogError($"Command not found {key.ToString()}");
                 return;
             }

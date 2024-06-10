@@ -1,4 +1,3 @@
-using Ametrin.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -79,7 +78,7 @@ namespace Ametrin.Command{
 
             foreach(var parameter in Parameters){
                 if(parameter.HasDefaultValue){
-                    builder.AppendFormat(" [<{0}>({1})]", parameter.Name, parameter.DefaultValue);
+                    builder.AppendFormat(" [<{0}>({1})]", parameter.Name, parameter.DefaultValue ?? "null");
                 }else{
                     builder.AppendFormat(" <{0}>", parameter.Name);
                 }
