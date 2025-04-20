@@ -1,12 +1,15 @@
 using System;
 using System.Linq;
 
-namespace Ametrin.Command{
-    public static class CommandManager{
+namespace Ametrin.Command
+{
+    public static class CommandManager
+    {
         public static readonly CommandGroup Commands = new();
         private static ICommandLogger Logger;
 
-        public static void SetLogger(ICommandLogger logger){
+        public static void SetLogger(ICommandLogger logger)
+        {
             Logger = logger;
         }
 
@@ -14,12 +17,14 @@ namespace Ametrin.Command{
         public static void LogWarning(string message) => Logger.LogWarning(message);
         public static void LogError(string message) => Logger.LogError(message);
 
-        public static void Execute(ReadOnlySpan<char> input){
+        public static void Execute(ReadOnlySpan<char> input)
+        {
             var inputParts = input.Split(' ');
-            if(inputParts.Count == 0) return;
+            if (inputParts.Count == 0) return;
 
             var key = input[inputParts[0]];
-            if(!Commands.TryGet(key, out var command)){
+            if (!Commands.TryGet(key, out var command))
+            {
                 LogError($"Command not found {key.ToString()}");
                 return;
             }
@@ -29,12 +34,14 @@ namespace Ametrin.Command{
     }
 
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    public sealed class CommandAttribute : Attribute{
+    public sealed class CommandAttribute : Attribute
+    {
         public readonly string Name;
 
         public CommandAttribute() : this(null) { }
 
-        public CommandAttribute(string name){
+        public CommandAttribute(string name)
+        {
             Name = name;
         }
     }
